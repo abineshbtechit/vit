@@ -80,6 +80,9 @@ def setup_database():
           user_id INT,
           hospital_id INT,
           doctor_id INT,
+          payment_method VARCHAR(50),
+          payment_status VARCHAR(50),
+          fee DECIMAL(10, 2),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
@@ -96,6 +99,9 @@ def setup_database():
           hospital_id INT NOT NULL,
           description TEXT NOT NULL,
           type VARCHAR(50) NOT NULL,
+          payment_method VARCHAR(50),
+          payment_status VARCHAR(50),
+          fee DECIMAL(10, 2),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
@@ -109,7 +115,13 @@ def setup_database():
             "ALTER TABLE queries ADD COLUMN doctor_id INT",
             "ALTER TABLE appointments ADD COLUMN user_id INT",
             "ALTER TABLE appointments ADD COLUMN hospital_id INT",
-            "ALTER TABLE appointments ADD COLUMN doctor_id INT"
+            "ALTER TABLE appointments ADD COLUMN doctor_id INT",
+            "ALTER TABLE appointments ADD COLUMN payment_method VARCHAR(50)",
+            "ALTER TABLE appointments ADD COLUMN payment_status VARCHAR(50)",
+            "ALTER TABLE appointments ADD COLUMN fee DECIMAL(10, 2)",
+            "ALTER TABLE patient_records ADD COLUMN payment_method VARCHAR(50)",
+            "ALTER TABLE patient_records ADD COLUMN payment_status VARCHAR(50)",
+            "ALTER TABLE patient_records ADD COLUMN fee DECIMAL(10, 2)"
         ]
         
         for statement in migration_statements:
@@ -130,7 +142,15 @@ def setup_database():
                 ("City Care Hospital", "Downtown"),
                 ("Metro General", "Westside"),
                 ("Apollo Speciality", "Central"),
-                ("Main Square Clinic", "Eastside")
+                ("Main Square Clinic", "Eastside"),
+                ("St. Mary's Medical Center", "North Valley"),
+                ("Oakwood General Hospital", "South Shore"),
+                ("Green Valley Clinic", "Green Valley"),
+                ("Sunrise Children's Hospital", "Eastside"),
+                ("Pacific Heart Institute", "Harbor District"),
+                ("North Star Orthopedics", "North Valley"),
+                ("Lakeside Wellness Center", "South Shore"),
+                ("Royal Park Hospital", "Central")
             ]
             cursor.executemany("INSERT INTO hospitals (name, location) VALUES (%s, %s)", hospitals_data)
             
@@ -138,11 +158,42 @@ def setup_database():
             h_ids = [row[0] for row in cursor.fetchall()]
             
             doctors_data = [
+                # Hospital 1
                 ("Dr. Smith", "Cardiology", h_ids[0]),
-                ("Dr. Adams", "Dermatology", h_ids[1]),
-                ("Dr. Brown", "Pediatrics", h_ids[2]),
                 ("Dr. Wilson", "Neurology", h_ids[0]),
-                ("Dr. Garcia", "General Health", h_ids[3])
+                ("Dr. Miller", "General Surgery", h_ids[0]),
+                # Hospital 2
+                ("Dr. Adams", "Dermatology", h_ids[1]),
+                ("Dr. Taylor", "Orthopedics", h_ids[1]),
+                ("Dr. Anderson", "ENT", h_ids[1]),
+                # Hospital 3
+                ("Dr. Brown", "Pediatrics", h_ids[2]),
+                ("Dr. Thomas", "Internal Medicine", h_ids[2]),
+                # Hospital 4
+                ("Dr. Garcia", "General Health", h_ids[3]),
+                ("Dr. Rodriguez", "Gastroenterology", h_ids[3]),
+                # Hospital 5
+                ("Dr. Martinez", "Psychiatry", h_ids[4]),
+                ("Dr. Hernandez", "Oncology", h_ids[4]),
+                # Hospital 6
+                ("Dr. Lopez", "Urology", h_ids[5]),
+                ("Dr. Gonzalez", "Ophthalmology", h_ids[5]),
+                # Hospital 7
+                ("Dr. Perez", "Gynecology", h_ids[6]),
+                # Hospital 8
+                ("Dr. Clark", "Pediatrics", h_ids[7]),
+                ("Dr. Lewis", "Child Psychology", h_ids[7]),
+                # Hospital 9
+                ("Dr. Walker", "Cardiology", h_ids[8]),
+                ("Dr. Young", "Cardiovascular Surgery", h_ids[8]),
+                # Hospital 10
+                ("Dr. Hall", "Orthopedics", h_ids[9]),
+                ("Dr. Allen", "Sports Medicine", h_ids[9]),
+                # Hospital 11
+                ("Dr. Wright", "Physiotherapy", h_ids[10]),
+                # Hospital 12
+                ("Dr. King", "Endocrinology", h_ids[11]),
+                ("Dr. Scott", "Rheumatology", h_ids[11])
             ]
             cursor.executemany("INSERT INTO doctors (name, specialization, hospital_id) VALUES (%s, %s, %s)", doctors_data)
             print("✓ Seeded sample hospitals and doctors data.")

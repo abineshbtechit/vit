@@ -81,6 +81,9 @@ def request_appointment():
     user_id = data.get('user_id')
     hospital_id = data.get('hospital_id')
     doctor_id = data.get('doctor_id')
+    payment_method = data.get('payment_method', 'hospital')
+    payment_status = data.get('payment_status', 'Pending')
+    fee = data.get('fee', 0)
 
     if not all([patient_name, specialization, appointment_date, time_slot]):
         return jsonify({"error": "Fields are required"}), 400
@@ -91,8 +94,8 @@ def request_appointment():
     try:
         cursor = connection.cursor()
         # Original Insert
-        query = "INSERT INTO appointments (patient_name, specialization, appointment_date, time_slot, notes, user_id, hospital_id, doctor_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        cursor.execute(query, (patient_name, specialization, appointment_date, time_slot, notes, user_id, hospital_id, doctor_id))
+        query = "INSERT INTO appointments (patient_name, specialization, appointment_date, time_slot, notes, user_id, hospital_id, doctor_id, payment_method, payment_status, fee) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (patient_name, specialization, appointment_date, time_slot, notes, user_id, hospital_id, doctor_id, payment_method, payment_status, fee))
         
         # Log to Unified Table
         cursor.execute("SELECT name, location FROM hospitals WHERE id = %s", (hospital_id,))
@@ -105,9 +108,9 @@ def request_appointment():
         doc_name = doc[0] if doc else "Unknown"
         
         cursor.execute("""
-            INSERT INTO patient_records (patient_name, doctor_name, hospital_name, location, hospital_id, description, type)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Appointment')
-        """, (patient_name, doc_name, hosp_name, hosp_loc, hospital_id, notes or "No notes"))
+            INSERT INTO patient_records (patient_name, doctor_name, hospital_name, location, hospital_id, description, type, payment_method, payment_status, fee)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Appointment', %s, %s, %s)
+        """, (patient_name, doc_name, hosp_name, hosp_loc, hospital_id, notes or "No notes", payment_method, payment_status, fee))
         
         connection.commit()
         return jsonify({"success": True, "id": cursor.lastrowid}), 201
@@ -217,7 +220,7 @@ def get_user_activity(user_id):
         # Fetch from the unified physical table
         cursor.execute("""
             SELECT type, created_at as date, doctor_name, hospital_name, 
-                   location, hospital_id, description, patient_name
+                   location, hospital_id, description, patient_name, payment_status, fee
             FROM patient_records
             WHERE patient_name = %s
             ORDER BY created_at DESC
