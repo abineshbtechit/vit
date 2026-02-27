@@ -1,142 +1,238 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Hero from './components/layout/Hero';
 import Card from './components/ui/Card';
 import QueryForm from './components/forms/QueryForm';
 import AppointmentForm from './components/forms/AppointmentForm';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import Button from './components/ui/Button';
+import { fetchHospitals, fetchDoctors, fetchUserActivity } from './services/api';
 
-// Home Page Component
-const Home = () => (
-  <>
-    <Hero />
+// --- RECORD TABLE COMPONENT ---
+const Records = ({ user }) => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserActivity(user.id)
+        .then(data => {
+          setActivities(data);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
+    }
+  }, [user]);
+
+  if (!user) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Please login to view records.</div>;
+  if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading records...</div>;
+
+  return (
     <div className="container" style={{ padding: '4rem 0' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '2.5rem', fontWeight: '800' }}>Our Services</h2>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '2rem'
-      }}>
-        <Card title="Expert Guidance" description="Connect with specialists for your health concerns through our query system." />
-        <Card title="Quick Appointments" description="Easy scheduling with our doctors across various specializations." />
-        <Card title="24/7 Support" description="Our helpdesk is always available for your medical assistance needs." />
+      <h2 style={{ textAlign: 'center', marginBottom: '3rem' }}>My Medical Records</h2>
+      <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius)', overflowX: 'auto', boxShadow: 'var(--shadow-md)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+          <thead style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+            <tr>
+              <th style={{ padding: '1.25rem' }}>Patient Name</th>
+              <th style={{ padding: '1.25rem' }}>Type</th>
+              <th style={{ padding: '1.25rem' }}>Date</th>
+              <th style={{ padding: '1.25rem' }}>Doctor</th>
+              <th style={{ padding: '1.25rem' }}>Hospital Name</th>
+              <th style={{ padding: '1.25rem' }}>Location</th>
+              <th style={{ padding: '1.25rem' }}>Hospital ID</th>
+              <th style={{ padding: '1.25rem' }}>Record/Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activities.length === 0 ? (
+              <tr><td colSpan="8" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>You haven't made any appointments or queries yet.</td></tr>
+            ) : (
+              activities.map((act, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '1.25rem', fontWeight: '500' }}>{act.patient_name}</td>
+                  <td style={{ padding: '1.25rem' }}>
+                    <span style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      textTransform: 'uppercase',
+                      backgroundColor: act.type === 'Appointment' ? 'rgba(0, 82, 204, 0.1)' : 'rgba(54, 179, 126, 0.1)',
+                      color: act.type === 'Appointment' ? 'var(--primary)' : 'var(--secondary)'
+                    }}>
+                      {act.type}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1.25rem', fontSize: '0.9rem' }}>{new Date(act.date).toLocaleDateString()}</td>
+                  <td style={{ padding: '1.25rem', fontWeight: '500' }}>{act.doctor_name}</td>
+                  <td style={{ padding: '1.25rem', fontWeight: '600' }}>{act.hospital_name}</td>
+                  <td style={{ padding: '1.25rem', color: 'var(--text-muted)' }}>{act.location}</td>
+                  <td style={{ padding: '1.25rem', color: 'var(--primary)', fontFamily: 'monospace' }}>#{String(act.hospital_id).padStart(4, '0')}</td>
+                  <td style={{ padding: '1.25rem', fontSize: '0.9rem', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{act.description || 'No description provided'}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
-  </>
-);
+  );
+};
 
-// Query Page Component
-const QueryPage = ({ onNotification }) => (
-  <div className="container" style={{ padding: '4rem 0', maxWidth: '800px' }}>
-    <Card
-      title="Healthcare Query"
-      description="Fill out the form below to receive expert guidance on your health concerns. Our team will review your query and respond within 24 hours."
-    >
-      <QueryForm onSuccess={onNotification} />
-    </Card>
-  </div>
-);
+// --- EXISTING COMPONENTS ---
 
-// Appointment Page Component
-const AppointmentPage = ({ onNotification }) => (
-  <div className="container" style={{ padding: '4rem 0', maxWidth: '800px' }}>
-    <Card
-      title="Book an Appointment"
-      description="Select your preferred specialization and time slot to book an appointment with our doctors. You will receive a confirmation message shortly."
-    >
-      <AppointmentForm onSuccess={onNotification} />
-    </Card>
-  </div>
-);
+const Home = ({ user }) => {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Hero />
+      <div className="container" style={{ padding: '4rem 0' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '2.5rem', fontWeight: '800' }}>Get Started</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+          <Card title="For Patients" description="Access healthcare queries and book appointments with ease.">
+            <Button onClick={() => user ? navigate('/select-hospital') : navigate('/login')} style={{ width: '100%' }}>Patient Login</Button>
+          </Card>
+          <Card title="For Hospitals" description="Manage patient requests and hospital operations.">
+            <Button variant="secondary" onClick={() => alert("Coming Soon!")} style={{ width: '100%' }}>Hospital Login</Button>
+          </Card>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const HospitalSelection = () => {
+  const [hospitals, setHospitals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchHospitals().then(data => { setHospitals(data); setLoading(false); });
+  }, []);
+
+  const handleSelect = (h) => {
+    localStorage.setItem('currentFlowState', JSON.stringify({ hospitalId: h.id, hospitalName: h.name, location: h.location }));
+    navigate(`/hospital/${h.id}/doctors`);
+  };
+
+  if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading...</div>;
+  return (
+    <div className="container" style={{ padding: '4rem 0' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '3rem' }}>Select a Hospital</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+        {hospitals.map(h => (
+          <Card key={h.id} title={h.name} description={h.location}>
+            <Button onClick={() => handleSelect(h)}>View Doctors</Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const DoctorSelection = () => {
+  const { id } = useParams();
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDoctors(id).then(data => { setDoctors(data); setLoading(false); });
+  }, [id]);
+
+  const handleSelect = (d) => {
+    const state = JSON.parse(localStorage.getItem('currentFlowState') || '{}');
+    localStorage.setItem('currentFlowState', JSON.stringify({ ...state, doctorId: d.id, doctorName: d.name, specialization: d.specialization }));
+    navigate(`/doctor/${d.id}/services`);
+  };
+
+  if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading...</div>;
+  return (
+    <div className="container" style={{ padding: '4rem 0' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '3rem' }}>Select a Doctor</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+        {doctors.map(d => (
+          <Card key={d.id} title={d.name} description={d.specialization}>
+            <Button onClick={() => handleSelect(d)}>Select Doctor</Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ServiceSelection = () => {
+  const navigate = useNavigate();
+  const state = JSON.parse(localStorage.getItem('currentFlowState') || '{}');
+  return (
+    <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
+      <h2 style={{ marginBottom: '0.5rem' }}>Options for {state.doctorName}</h2>
+      <p style={{ color: 'var(--text-muted)', marginBottom: '3rem' }}>{state.hospitalName} • {state.specialization}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+        <Card title="Appointment" description="Book a visit."><Button onClick={() => navigate('/appointment-form')}>Book Now</Button></Card>
+        <Card title="Query" description="Ask a question."><Button variant="secondary" onClick={() => navigate('/query-form')}>Send Query</Button></Card>
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const [notification, setNotification] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('mediFlowUser');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   useEffect(() => {
     if (notification) {
-      const timer = setTimeout(() => {
-        setNotification(null);
-      }, 5000);
+      const timer = setTimeout(() => setNotification(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [notification]);
 
-  const handleSuccess = (message) => {
-    setNotification(message);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('mediFlowUser', JSON.stringify(userData));
+    setNotification(`Logged in as ${userData.name}`);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('mediFlowUser');
+    setNotification("Logged out successfully.");
   };
 
   return (
     <Router>
-      <div className="App" style={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
-        <Header />
-
-        <main style={{ minHeight: '70vh' }}>
+      <div className="App">
+        <Header user={user} onLogout={handleLogout} />
+        <main>
           {notification && (
-            <div className="container">
-              <div style={{
-                backgroundColor: 'var(--success)',
-                color: 'white',
-                padding: '1rem 2rem',
-                borderRadius: 'var(--radius)',
-                marginTop: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                boxShadow: 'var(--shadow-md)',
-                animation: 'fadeInDown 0.4s ease'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '1.25rem' }}>✓</span>
-                  <p style={{ fontWeight: '500' }}>{notification}</p>
-                </div>
-                <button
-                  onClick={() => setNotification(null)}
-                  style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.25rem', padding: '0 0.5rem' }}
-                >
-                  ×
-                </button>
-              </div>
+            <div className="container" style={{ marginTop: '1.5rem' }}>
+              <div style={{ backgroundColor: 'var(--success)', color: 'white', padding: '1rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-md)' }}>{notification}</div>
             </div>
           )}
-
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/query" element={<QueryPage onNotification={handleSuccess} />} />
-            <Route path="/appointment" element={<AppointmentPage onNotification={handleSuccess} />} />
+            <Route path="/" element={<Home user={user} />} />
+            <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+            <Route path="/signup" element={<Signup onSignupSuccess={handleLoginSuccess} />} />
+            <Route path="/select-hospital" element={<HospitalSelection />} />
+            <Route path="/hospital/:id/doctors" element={<DoctorSelection />} />
+            <Route path="/doctor/:id/services" element={<ServiceSelection />} />
+            <Route path="/records" element={<Records user={user} />} />
+            <Route path="/appointment-form" element={<div className="container" style={{ padding: '4rem 0', maxWidth: '600px' }}><Card title="Book Appointment"><AppointmentForm onSuccess={(m) => { setNotification(m); window.scrollTo(0, 0); }} /></Card></div>} />
+            <Route path="/query-form" element={<div className="container" style={{ padding: '4rem 0', maxWidth: '600px' }}><Card title="Submit Query"><QueryForm onSuccess={(m) => { setNotification(m); window.scrollTo(0, 0); }} /></Card></div>} />
           </Routes>
         </main>
-
-        <footer style={{
-          backgroundColor: 'var(--text)',
-          color: 'white',
-          padding: '3rem 0',
-          marginTop: '4rem'
-        }}>
-          <div className="container" style={{ textAlign: 'center' }}>
-            <p style={{ opacity: 0.7 }}>&copy; {new Date().getFullYear()} MediFlow Healthcare. All rights reserved.</p>
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
-              <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>Privacy Policy</span>
-              <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>Terms of Service</span>
-              <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>Patient Rights</span>
-            </div>
-          </div>
+        <footer style={{ backgroundColor: 'var(--text)', color: 'white', padding: '3rem 0', marginTop: '4rem', textAlign: 'center' }}>
+          <div className="container"><p>&copy; {new Date().getFullYear()} MediFlow Healthcare.</p></div>
         </footer>
-
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-            box-sizing: border-box;
-          }
-        `}} />
       </div>
     </Router>
   );

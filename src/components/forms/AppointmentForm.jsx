@@ -6,9 +6,12 @@ import Button from '../ui/Button';
 import { requestAppointment } from '../../services/api';
 
 const AppointmentForm = ({ onSuccess }) => {
+    const user = JSON.parse(localStorage.getItem('mediFlowUser') || '{}');
+    const state = JSON.parse(localStorage.getItem('currentFlowState') || '{}');
+
     const [formData, setFormData] = useState({
-        patientName: '',
-        specialization: '',
+        patientName: user.name || '',
+        specialization: state.specialization || '',
         preferredDate: '',
         preferredTime: '',
         notes: ''
@@ -17,19 +20,9 @@ const AppointmentForm = ({ onSuccess }) => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
-    const specializations = [
-        { value: 'general', label: 'General Physician' },
-        { value: 'cardiology', label: 'Cardiologist' },
-        { value: 'dermatology', label: 'Dermatologist' },
-        { value: 'pediatrics', label: 'Pediatrician' },
-        { value: 'neurology', label: 'Neurologist' },
-        { value: 'orthopedics', label: 'Orthopedic Surgeon' }
-    ];
-
     const validate = () => {
         const newErrors = {};
         if (!formData.patientName.trim()) newErrors.patientName = 'Patient Name is required';
-        if (!formData.specialization) newErrors.specialization = 'Please select a specialization';
         if (!formData.preferredDate) newErrors.preferredDate = 'Preferred Date is required';
         if (!formData.preferredTime) newErrors.preferredTime = 'Preferred Time Slot is required';
 
@@ -47,19 +40,22 @@ const AppointmentForm = ({ onSuccess }) => {
                     specialization: formData.specialization,
                     appointment_date: formData.preferredDate,
                     time_slot: formData.preferredTime,
-                    notes: formData.notes
+                    notes: formData.notes,
+                    user_id: user.id,
+                    hospital_id: state.hospitalId,
+                    doctor_id: state.doctorId
                 });
 
-                onSuccess('Your appointment request has been scheduled. Please wait for confirmation.');
+                onSuccess('Your appointment request has been scheduled successfully.');
                 setFormData({
-                    patientName: '',
-                    specialization: '',
+                    patientName: user.name || '',
+                    specialization: state.specialization || '',
                     preferredDate: '',
                     preferredTime: '',
                     notes: ''
                 });
             } catch (error) {
-                alert(error.message || 'Could not connect to the server. Please ensure the backend is running.');
+                alert(error.message || 'Could not connect to the server.');
             } finally {
                 setLoading(false);
             }
@@ -76,24 +72,20 @@ const AppointmentForm = ({ onSuccess }) => {
 
     return (
         <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Hospital: <strong>{state.hospitalName || 'Selected Hospital'}</strong></p>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#64748b' }}>Doctor: <strong>{state.doctorName || 'Selected Doctor'}</strong></p>
+            </div>
+
             <Input
                 id="patientName"
                 label="Patient Name"
-                placeholder="Enter patient full name"
                 value={formData.patientName}
                 onChange={handleChange}
                 error={errors.patientName}
                 required
             />
-            <Select
-                id="specialization"
-                label="Doctor Specialization"
-                options={specializations}
-                value={formData.specialization}
-                onChange={handleChange}
-                error={errors.specialization}
-                required
-            />
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <Input
                     id="preferredDate"
@@ -117,13 +109,13 @@ const AppointmentForm = ({ onSuccess }) => {
             <Textarea
                 id="notes"
                 label="Additional Notes"
-                placeholder="Any specific instructions or symptoms..."
+                placeholder="Symptoms or instructions..."
                 value={formData.notes}
                 onChange={handleChange}
                 error={errors.notes}
             />
-            <Button type="submit" variant="secondary" loading={loading}>
-                Request Appointment
+            <Button type="submit" loading={loading}>
+                Confirm Appointment
             </Button>
         </form>
     );

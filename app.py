@@ -30,23 +30,41 @@ def submit_query():
     email = data.get('email')
     category = data.get('category')
     message = data.get('message')
+    user_id = data.get('user_id')
+    hospital_id = data.get('hospital_id')
+    doctor_id = data.get('doctor_id')
 
-    # Basic Validation
     if not all([name, email, category, message]):
-        return jsonify({"error": "All fields are required"}), 400
+        return jsonify({"error": "Fields are required"}), 400
 
     connection = get_db_connection()
-    if not connection:
-        return jsonify({"error": "Failed to connect to the database. Make sure MySQL is running and the 'mediflow_db' database exists."}), 500
+    if not connection: return jsonify({"error": "DB error"}), 500
         
     try:
         cursor = connection.cursor()
-        query = "INSERT INTO queries (name, email, category, message) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (name, email, category, message))
+        # Original Insert
+        query = "INSERT INTO queries (name, email, category, message, user_id, hospital_id, doctor_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (name, email, category, message, user_id, hospital_id, doctor_id))
+        
+        # Log to Unified Table
+        cursor.execute("SELECT name, location FROM hospitals WHERE id = %s", (hospital_id,))
+        hosp = cursor.fetchone()
+        hosp_name = hosp[0] if hosp else "Unknown"
+        hosp_loc = hosp[1] if hosp else "Unknown"
+        
+        cursor.execute("SELECT name FROM doctors WHERE id = %s", (doctor_id,))
+        doc = cursor.fetchone()
+        doc_name = doc[0] if doc else "Unknown"
+        
+        cursor.execute("""
+            INSERT INTO patient_records (patient_name, doctor_name, hospital_name, location, hospital_id, description, type)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Query')
+        """, (name, doc_name, hosp_name, hosp_loc, hospital_id, message))
+        
         connection.commit()
-        return jsonify({"success": True, "message": "Query submitted successfully", "id": cursor.lastrowid}), 201
+        return jsonify({"success": True, "id": cursor.lastrowid}), 201
     except Error as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         connection.close()
@@ -60,23 +78,151 @@ def request_appointment():
     appointment_date = data.get('appointment_date')
     time_slot = data.get('time_slot')
     notes = data.get('notes', '')
+    user_id = data.get('user_id')
+    hospital_id = data.get('hospital_id')
+    doctor_id = data.get('doctor_id')
 
-    # Basic Validation
     if not all([patient_name, specialization, appointment_date, time_slot]):
-        return jsonify({"error": "All mandatory fields are required"}), 400
+        return jsonify({"error": "Fields are required"}), 400
 
     connection = get_db_connection()
-    if not connection:
-        return jsonify({"error": "Failed to connect to the database. Make sure MySQL is running and the 'mediflow_db' database exists."}), 500
+    if not connection: return jsonify({"error": "DB error"}), 500
 
     try:
         cursor = connection.cursor()
-        query = "INSERT INTO appointments (patient_name, specialization, appointment_date, time_slot, notes) VALUES (%s, %s, %s, %s, %s)"
-        cursor.execute(query, (patient_name, specialization, appointment_date, time_slot, notes))
+        # Original Insert
+        query = "INSERT INTO appointments (patient_name, specialization, appointment_date, time_slot, notes, user_id, hospital_id, doctor_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (patient_name, specialization, appointment_date, time_slot, notes, user_id, hospital_id, doctor_id))
+        
+        # Log to Unified Table
+        cursor.execute("SELECT name, location FROM hospitals WHERE id = %s", (hospital_id,))
+        hosp = cursor.fetchone()
+        hosp_name = hosp[0] if hosp else "Unknown"
+        hosp_loc = hosp[1] if hosp else "Unknown"
+        
+        cursor.execute("SELECT name FROM doctors WHERE id = %s", (doctor_id,))
+        doc = cursor.fetchone()
+        doc_name = doc[0] if doc else "Unknown"
+        
+        cursor.execute("""
+            INSERT INTO patient_records (patient_name, doctor_name, hospital_name, location, hospital_id, description, type)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Appointment')
+        """, (patient_name, doc_name, hosp_name, hosp_loc, hospital_id, notes or "No notes"))
+        
         connection.commit()
-        return jsonify({"success": True, "message": "Appointment request submitted successfully", "id": cursor.lastrowid}), 201
+        return jsonify({"success": True, "id": cursor.lastrowid}), 201
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+# 5. Hospitals and Doctors Endpoints
+@app.route('/api/hospitals', methods=['GET'])
+def get_hospitals():
+    connection = get_db_connection()
+    if not connection: return jsonify({"error": "DB error"}), 500
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM hospitals")
+        return jsonify(cursor.fetchall()), 200
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/hospitals/<int:hospital_id>/doctors', methods=['GET'])
+def get_doctors(hospital_id):
+    connection = get_db_connection()
+    if not connection: return jsonify({"error": "DB error"}), 500
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM doctors WHERE hospital_id = %s", (hospital_id,))
+        return jsonify(cursor.fetchall()), 200
+    finally:
+        cursor.close()
+        connection.close()
+
+# 3. User Signup Endpoint
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.json
+    name = data.get('name')
+    phone = data.get('phone')
+    password = data.get('password')
+
+    if not all([name, phone, password]):
+        return jsonify({"error": "Name, Phone, and Password are required"}), 400
+
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT id FROM users WHERE phone = %s", (phone,))
+        if cursor.fetchone():
+            return jsonify({"error": "User with this phone number already exists"}), 409
+
+        query = "INSERT INTO users (name, phone, password) VALUES (%s, %s, %s)"
+        cursor.execute(query, (name, phone, password))
+        connection.commit()
+        return jsonify({"success": True, "message": "Signup successful", "user": {"name": name, "phone": phone}}), 201
     except Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+# 4. User Login Endpoint
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    phone = data.get('phone')
+    password = data.get('password')
+
+    if not all([phone, password]):
+        return jsonify({"error": "Phone and Password are required"}), 400
+
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        query = "SELECT id, name, phone FROM users WHERE phone = %s AND password = %s"
+        cursor.execute(query, (phone, password))
+        user = cursor.fetchone()
+
+        if user:
+            return jsonify({"success": True, "message": "Login successful", "user": user}), 200
+        else:
+            return jsonify({"error": "Invalid phone number or password"}), 401
+    except Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/user/<int:user_id>/activity', methods=['GET'])
+def get_user_activity(user_id):
+    connection = get_db_connection()
+    if not connection: return jsonify({"error": "DB error"}), 500
+    try:
+        cursor = connection.cursor(dictionary=True)
+        # Fetch name of the user to query the patient_records table
+        cursor.execute("SELECT name FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+        if not user_info: return jsonify([]), 200
+        
+        # Fetch from the unified physical table
+        cursor.execute("""
+            SELECT type, created_at as date, doctor_name, hospital_name, 
+                   location, hospital_id, description, patient_name
+            FROM patient_records
+            WHERE patient_name = %s
+            ORDER BY created_at DESC
+        """, (user_info['name'],))
+        return jsonify(cursor.fetchall()), 200
     finally:
         cursor.close()
         connection.close()

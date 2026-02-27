@@ -6,10 +6,13 @@ import Button from '../ui/Button';
 import { submitQuery } from '../../services/api';
 
 const QueryForm = ({ onSuccess }) => {
+    const user = JSON.parse(localStorage.getItem('mediFlowUser') || '{}');
+    const state = JSON.parse(localStorage.getItem('currentFlowState') || '{}');
+
     const [formData, setFormData] = useState({
-        fullName: '',
-        contact: '',
-        category: '',
+        fullName: user.name || '',
+        contact: user.phone || '',
+        category: state.specialization || 'general',
         description: ''
     });
 
@@ -27,12 +30,7 @@ const QueryForm = ({ onSuccess }) => {
     const validate = () => {
         const newErrors = {};
         if (!formData.fullName.trim()) newErrors.fullName = 'Full Name is required';
-        if (!formData.contact.trim()) {
-            newErrors.contact = 'Email or Phone is required';
-        } else if (formData.contact.includes('@') && !/\S+@\S+\.\S+/.test(formData.contact)) {
-            newErrors.contact = 'Invalid email format';
-        }
-        if (!formData.category) newErrors.category = 'Please select a category';
+        if (!formData.contact.trim()) newErrors.contact = 'Contact is required';
         if (!formData.description.trim()) newErrors.description = 'Description is required';
 
         setErrors(newErrors);
@@ -48,13 +46,16 @@ const QueryForm = ({ onSuccess }) => {
                     name: formData.fullName,
                     email: formData.contact,
                     category: formData.category,
-                    message: formData.description
+                    message: formData.description,
+                    user_id: user.id,
+                    hospital_id: state.hospitalId,
+                    doctor_id: state.doctorId
                 });
 
-                onSuccess('Your healthcare query has been submitted successfully. A specialist will contact you soon.');
-                setFormData({ fullName: '', contact: '', category: '', description: '' });
+                onSuccess('Your query has been submitted successfully to ' + state.doctorName);
+                setFormData(prev => ({ ...prev, description: '' }));
             } catch (error) {
-                alert(error.message || 'Could not connect to the server. Please ensure the backend is running.');
+                alert(error.message || 'Could not connect to the server.');
             } finally {
                 setLoading(false);
             }
@@ -71,10 +72,14 @@ const QueryForm = ({ onSuccess }) => {
 
     return (
         <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#0369a1' }}>Sending to: <strong>{state.doctorName || 'Doctor'}</strong></p>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#0369a1' }}>Specialty: <strong>{state.specialization || 'Healthcare'}</strong></p>
+            </div>
+
             <Input
                 id="fullName"
                 label="Full Name"
-                placeholder="Enter your full name"
                 value={formData.fullName}
                 onChange={handleChange}
                 error={errors.fullName}
@@ -83,7 +88,6 @@ const QueryForm = ({ onSuccess }) => {
             <Input
                 id="contact"
                 label="Email / Phone"
-                placeholder="Enter your email or phone number"
                 value={formData.contact}
                 onChange={handleChange}
                 error={errors.contact}
@@ -101,13 +105,13 @@ const QueryForm = ({ onSuccess }) => {
             <Textarea
                 id="description"
                 label="Query Description"
-                placeholder="Tell us about your health concern..."
+                placeholder="Describe your health concern..."
                 value={formData.description}
                 onChange={handleChange}
                 error={errors.description}
                 required
             />
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={loading} variant="secondary">
                 Submit Query
             </Button>
         </form>
