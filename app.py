@@ -57,9 +57,9 @@ def submit_query():
         doc_name = doc[0] if doc else "Unknown"
         
         cursor.execute("""
-            INSERT INTO patient_records (patient_name, doctor_name, hospital_name, location, hospital_id, description, type)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Query')
-        """, (name, doc_name, hosp_name, hosp_loc, hospital_id, message))
+            INSERT INTO patient_records (user_id, patient_name, doctor_name, hospital_name, location, hospital_id, description, type)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Query')
+        """, (user_id, name, doc_name, hosp_name, hosp_loc, hospital_id, message))
         
         connection.commit()
         return jsonify({"success": True, "id": cursor.lastrowid}), 201
@@ -108,9 +108,9 @@ def request_appointment():
         doc_name = doc[0] if doc else "Unknown"
         
         cursor.execute("""
-            INSERT INTO patient_records (patient_name, doctor_name, hospital_name, location, hospital_id, description, type, payment_method, payment_status, fee)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Appointment', %s, %s, %s)
-        """, (patient_name, doc_name, hosp_name, hosp_loc, hospital_id, notes or "No notes", payment_method, payment_status, fee))
+            INSERT INTO patient_records (user_id, patient_name, doctor_name, hospital_name, location, hospital_id, description, type, payment_method, payment_status, fee)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Appointment', %s, %s, %s)
+        """, (user_id, patient_name, doc_name, hosp_name, hosp_loc, hospital_id, notes or "No notes", payment_method, payment_status, fee))
         
         connection.commit()
         return jsonify({"success": True, "id": cursor.lastrowid}), 201
@@ -168,8 +168,9 @@ def signup():
 
         query = "INSERT INTO users (name, phone, password) VALUES (%s, %s, %s)"
         cursor.execute(query, (name, phone, password))
+        user_id = cursor.lastrowid
         connection.commit()
-        return jsonify({"success": True, "message": "Signup successful", "user": {"name": name, "phone": phone}}), 201
+        return jsonify({"success": True, "message": "Signup successful", "user": {"id": user_id, "name": name, "phone": phone}}), 201
     except Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     finally:
@@ -212,20 +213,56 @@ def get_user_activity(user_id):
     if not connection: return jsonify({"error": "DB error"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        # Fetch name of the user to query the patient_records table
+        # Fetch name of the user as fallback for legacy records
         cursor.execute("SELECT name FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
-        if not user_info: return jsonify([]), 200
         
-        # Fetch from the unified physical table
-        cursor.execute("""
-            SELECT type, created_at as date, doctor_name, hospital_name, 
-                   location, hospital_id, description, patient_name, payment_status, fee
+        # Query by user_id primary, or name as fallback (OR condition)
+        query = """
+            SELECT id, type, created_at as date, doctor_name, hospital_name, 
+                   location, hospital_id, description, patient_name, payment_status, fee, is_read
             FROM patient_records
-            WHERE patient_name = %s
-            ORDER BY created_at DESC
-        """, (user_info['name'],))
+            WHERE user_id = %s
+        """
+        params = [user_id]
+        
+        if user_info:
+            query += " OR (user_id IS NULL AND patient_name = %s)"
+            params.append(user_info['name'])
+            
+        query += " ORDER BY created_at DESC"
+        
+        cursor.execute(query, tuple(params))
         return jsonify(cursor.fetchall()), 200
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/records/<int:record_id>/read', methods=['PUT'])
+def mark_record_read(record_id):
+    connection = get_db_connection()
+    if not connection: return jsonify({"error": "DB error"}), 500
+    try:
+        cursor = connection.cursor()
+        cursor.execute("UPDATE patient_records SET is_read = TRUE WHERE id = %s", (record_id,))
+        connection.commit()
+        return jsonify({"success": True}), 200
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/records/<int:record_id>', methods=['GET'])
+def get_record(record_id):
+    connection = get_db_connection()
+    if not connection: return jsonify({"error": "DB error"}), 500
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM patient_records WHERE id = %s", (record_id,))
+        record = cursor.fetchone()
+        if not record: return jsonify({"error": "Record not found"}), 404
+        return jsonify(record), 200
     finally:
         cursor.close()
         connection.close()

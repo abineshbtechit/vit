@@ -11,7 +11,7 @@ const Home = ({ user }) => {
             <Hero />
 
             {/* Features Section */}
-            <div style={{ backgroundColor: 'white', padding: '6rem 0' }}>
+            <div style={{ padding: '6rem 0' }}>
                 <div className="container">
                     <ScrollReveal>
                         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
@@ -31,22 +31,23 @@ const Home = ({ user }) => {
                                 <div style={{
                                     padding: '2.5rem',
                                     borderRadius: '24px',
-                                    backgroundColor: '#f8fafc',
+                                    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                                    backdropFilter: 'blur(10px)',
                                     transition: 'all 0.3s ease',
-                                    border: '1px solid #f1f5f9',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
                                     height: '100%'
                                 }} className="feature-card">
                                     <div style={{
                                         width: '60px',
                                         height: '60px',
-                                        backgroundColor: 'white',
+                                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
                                         borderRadius: '16px',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontSize: '1.5rem',
                                         marginBottom: '1.5rem',
-                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)'
+                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)'
                                     }}>
                                         {f.icon}
                                     </div>
@@ -87,16 +88,16 @@ const Home = ({ user }) => {
                                 <div style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>👩‍⚕️</div>
                                 <h3 style={{ marginBottom: '1rem', fontSize: '1.75rem', color: 'white' }}>For Patients</h3>
                                 <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2.5rem', flexGrow: 1, lineHeight: '1.6' }}>Track your health journey, book appointments, and consult with top doctors instantly.</p>
-                                <Button onClick={() => user ? navigate('/select-hospital') : navigate('/login')} style={{ width: '100%', padding: '1.2rem', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '700' }}>Enter Patient Portal</Button>
+                                <Button onClick={() => user ? navigate('/select-hospital') : navigate('/login')} style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', fontWeight: '700' }}>Enter Patient Portal</Button>
                             </div>
                         </ScrollReveal>
 
                         <ScrollReveal delay={0.4} direction="right">
-                            <div style={{ backgroundColor: 'white', padding: '3.5rem 2.5rem', borderRadius: '32px', color: '#0f172a', textAlign: 'left', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
+                            <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(10px)', padding: '3.5rem 2.5rem', borderRadius: '32px', color: 'white', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.1)', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>🏥</div>
-                                <h3 style={{ marginBottom: '1rem', fontSize: '1.75rem', color: '#0f172a' }}>For Hospitals</h3>
-                                <p style={{ color: '#64748b', marginBottom: '2.5rem', flexGrow: 1, lineHeight: '1.6' }}>Streamline your hospital management and connect with more patients through our network.</p>
-                                <Button variant="secondary" onClick={() => alert("Hospital registration is currently closed.")} style={{ width: '100%', padding: '1.2rem', backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '16px', fontWeight: '700' }}>Hospital Onboarding</Button>
+                                <h3 style={{ marginBottom: '1rem', fontSize: '1.75rem', color: 'white' }}>For Hospitals</h3>
+                                <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2.5rem', flexGrow: 1, lineHeight: '1.6' }}>Streamline your hospital management and connect with more patients through our network.</p>
+                                <Button variant="secondary" onClick={() => alert("Hospital registration is currently closed.")} style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', fontWeight: '700' }}>Hospital Onboarding</Button>
                             </div>
                         </ScrollReveal>
                     </div>

@@ -21,11 +21,10 @@ const HospitalSelection = () => {
     if (loading) return <div className="container" style={{ padding: '6rem 0', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px', borderTopColor: 'var(--primary)' }}></div><p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Finding hospitals near you...</p></div>;
 
     return (
-        <div style={{ backgroundColor: '#fcfdfe', minHeight: '80vh' }}>
+        <div style={{ minHeight: '80vh' }}>
             <div style={{
-                background: 'linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%)',
+                background: 'transparent',
                 padding: '5rem 0 8rem',
-                borderBottom: '1px solid #e2e8f0',
                 textAlign: 'center'
             }}>
                 <div className="container">
@@ -40,7 +39,7 @@ const HospitalSelection = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
                     {hospitals.map((h, i) => (
                         <ScrollReveal key={h.id} delay={i * 0.05}>
-                            <div style={{ backgroundColor: 'white', borderRadius: '30px', padding: '2.5rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', position: 'relative', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(10px)', borderRadius: '30px', padding: '2.5rem', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{
                                     width: '60px',
                                     height: '60px',
@@ -57,9 +56,11 @@ const HospitalSelection = () => {
                                     📍 {h.location}
                                 </p>
                                 <div style={{ flexGrow: 1, marginBottom: '2rem' }}>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>Leading facility with modern amenities and specialized medical departments.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                        {h.description || 'Leading facility with modern amenities and specialized medical departments.'}
+                                    </p>
                                 </div>
-                                <Button onClick={() => handleSelect(h)} style={{ width: '100%', padding: '1rem', borderRadius: '15px' }}>View Doctors</Button>
+                                <Button onClick={() => handleSelect(h)} style={{ width: '100%', padding: '1rem', borderRadius: '50px' }}>View Doctors</Button>
                             </div>
                         </ScrollReveal>
                     ))}

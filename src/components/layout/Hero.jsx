@@ -1,22 +1,24 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+    const navigate = useNavigate();
     const { scrollY } = useScroll();
     const y1 = useTransform(scrollY, [0, 500], [0, 100]);
     const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
     return (
         <section style={{
-            padding: '6rem 0',
-            background: 'radial-gradient(circle at 10% 20%, rgba(0, 82, 204, 0.03) 0%, rgba(255, 255, 255, 1) 90%)',
+            padding: '0',
+            background: 'transparent',
             position: 'relative',
             overflow: 'hidden',
-            minHeight: '80vh',
+            minHeight: 'calc(100vh - 72px)',
             display: 'flex',
             alignItems: 'center'
         }}>
-            <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="container" style={{ position: 'relative', zIndex: 1, padding: '4rem 2rem' }}>
                 <div className="grid-2 hero-grid" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
@@ -69,19 +71,40 @@ const Hero = () => {
                         }}>
                             Experience medical care like never before. Connect with top specialists, manage records, and book appointments instantly with MediFlow.
                         </motion.p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
                             {['✓ Quick Appointments', '✓ Top Doctors', '✓ 24/7 Access'].map((tag, i) => (
                                 <div key={i} style={{
                                     padding: '0.4rem 0.8rem',
-                                    backgroundColor: 'rgba(0, 82, 204, 0.05)',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
                                     borderRadius: '8px',
-                                    color: 'var(--primary)',
+                                    color: '#3b82f6',
                                     fontWeight: '700',
                                     fontSize: '0.85rem'
                                 }}>
                                     {tag}
                                 </div>
                             ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => navigate('/select-hospital')}
+                                style={{
+                                    padding: '1rem 2rem',
+                                    backgroundColor: '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '50px',
+                                    fontSize: '1rem',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    boxShadow: '0 10px 25px -5px rgba(59,130,246,0.4)'
+                                }}
+                            >
+                                🏥 Explore Hospitals
+                            </button>
                         </div>
                     </motion.div>
 
@@ -124,10 +147,10 @@ const Hero = () => {
                                     zIndex: 2
                                 }}
                             >
-                                <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--secondary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>➕</div>
+                                <div style={{ width: '40px', height: '40px', backgroundColor: '#3b82f6', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.2rem' }}>🏥</div>
                                 <div>
-                                    <h4 style={{ margin: 0, fontSize: '1rem' }}>500+</h4>
-                                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Expert Doctors</p>
+                                    <h4 style={{ margin: 0, fontSize: '1rem', color: '#0f172a' }}>50+</h4>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>Our Hospitals</p>
                                 </div>
                             </motion.div>
                         </div>

@@ -1,18 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const Card = ({ children, title, description, className = '' }) => {
+const Card = ({ children, title, description, className = '', hoverEffect = true }) => {
     return (
         <div style={{ perspective: '1000px', height: '100%' }}>
             <motion.div
-                whileHover={{
+                whileHover={hoverEffect ? {
                     y: -10,
                     scale: 1.02,
                     rotateX: 5,
                     rotateY: -5,
                     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                } : {}}
+                transition={hoverEffect ? { type: "spring", stiffness: 300, damping: 20 } : {}}
                 style={{
                     backgroundColor: 'var(--surface)',
                     borderRadius: 'var(--radius)',

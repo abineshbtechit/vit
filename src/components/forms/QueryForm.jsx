@@ -17,6 +17,7 @@ const QueryForm = ({ onSuccess }) => {
     });
 
     const [errors, setErrors] = useState({});
+    const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const categories = [
@@ -52,8 +53,12 @@ const QueryForm = ({ onSuccess }) => {
                     doctor_id: state.doctorId
                 });
 
+                setSubmitted(true);
                 onSuccess('Your query has been submitted successfully to ' + state.doctorName);
                 setFormData(prev => ({ ...prev, description: '' }));
+
+                // Reset submitted state after a few seconds
+                setTimeout(() => setSubmitted(false), 8000);
             } catch (error) {
                 alert(error.message || 'Could not connect to the server.');
             } finally {
@@ -70,11 +75,37 @@ const QueryForm = ({ onSuccess }) => {
         }
     };
 
+    if (submitted) {
+        return (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <div style={{
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: 'var(--success)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.5rem',
+                    fontSize: '2rem'
+                }}>✓</div>
+                <h3 style={{ marginBottom: '0.5rem' }}>Query Sent!</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                    Your health concern has been recorded.
+                    <br />
+                    <strong>A notification will appear in 30 seconds.</strong>
+                </p>
+                <Button onClick={() => setSubmitted(false)} variant="secondary">Send Another Query</Button>
+            </div>
+        );
+    }
+
     return (
         <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd' }}>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#0369a1' }}>Sending to: <strong>{state.doctorName || 'Doctor'}</strong></p>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#0369a1' }}>Specialty: <strong>{state.specialization || 'Healthcare'}</strong></p>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#0369a1' }}>Sending to: <strong style={{ color: '#0c4a6e' }}>{state.doctorName || 'Doctor'}</strong></p>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#0369a1' }}>Specialty: <strong style={{ color: '#0c4a6e' }}>{state.specialization || 'Healthcare'}</strong></p>
             </div>
 
             <Input

@@ -133,9 +133,9 @@ const AppointmentForm = ({ onSuccess }) => {
 
     return (
         <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1.5rem', padding: '1.25rem', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Consulting: <strong style={{ color: 'var(--text)' }}>{state.doctorName}</strong></p>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#64748b' }}>Specialty: <strong style={{ color: 'var(--text)' }}>{state.specialization}</strong></p>
+            <div style={{ marginBottom: '1.5rem', padding: '1.25rem', backgroundColor: '#f0f9ff', borderRadius: '16px', border: '1px solid #bae6fd' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#0369a1' }}>Consulting: <strong style={{ color: '#0c4a6e' }}>{state.doctorName}</strong></p>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', color: '#0369a1' }}>Specialty: <strong style={{ color: '#0c4a6e' }}>{state.specialization}</strong></p>
             </div>
 
             <Input
