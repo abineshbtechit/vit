@@ -1,145 +1,143 @@
+import os
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error as MySQLError
 
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '0402'
+# Make postgres optional for local dev
+try:
+    import psycopg2
+    from urllib.parse import urlparse
+    HAS_POSTGRES = True
+except ImportError:
+    HAS_POSTGRES = False
+
+DATABASE_URL = os.getenv('DATABASE_URL')
+db_config_mysql = {
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', '0402')
 }
 
 def setup_database():
+    is_postgres = False
+    connection = None
+    
     try:
-        connection = mysql.connector.connect(**db_config)
+        if DATABASE_URL and HAS_POSTGRES:
+            print("Connecting to PostgreSQL...")
+            connection = psycopg2.connect(DATABASE_URL)
+            is_postgres = True
+        elif DATABASE_URL and not HAS_POSTGRES:
+            print("Note: DATABASE_URL is set but 'psycopg2' is not installed. Using MySQL instead.")
+            print("Connecting to MySQL...")
+            connection = mysql.connector.connect(**db_config_mysql)
+            is_postgres = False
+        else:
+            print("Connecting to MySQL...")
+            connection = mysql.connector.connect(**db_config_mysql)
+            is_postgres = False
+            
         cursor = connection.cursor()
         
-        # Create Database
-        cursor.execute("CREATE DATABASE IF NOT EXISTS mediflow_db")
-        print("✓ Database 'mediflow_db' checked/created.")
-        
-        cursor.execute("USE mediflow_db")
-        
-        # 1. Create Tables with all required columns
+        if not is_postgres:
+            cursor.execute("CREATE DATABASE IF NOT EXISTS mediflow_db")
+            cursor.execute("USE mediflow_db")
+            print("✓ MySQL Database 'mediflow_db' ready.")
+        else:
+            print("✓ PostgreSQL Database ready.")
+
+        # SQL Dialect helpers
+        ID_TYPE = "SERIAL PRIMARY KEY" if is_postgres else "INT AUTO_INCREMENT PRIMARY KEY"
+        TEXT_TYPE = "TEXT"
+        TIMESTAMP_TYPE = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+
+        # 1. Create Tables
         # Users Table
-        cursor.execute("""
+        cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS users (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id {ID_TYPE},
           name VARCHAR(255) NOT NULL,
           phone VARCHAR(15) NOT NULL UNIQUE,
           password VARCHAR(255) NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at {TIMESTAMP_TYPE}
         )
         """)
-        print("✓ Table 'users' checked/created.")
-
+        
         # Hospitals Table
-        cursor.execute("""
+        cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS hospitals (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id {ID_TYPE},
           name VARCHAR(255) NOT NULL,
           location VARCHAR(255) NOT NULL
         )
         """)
 
         # Doctors Table
-        cursor.execute("""
+        cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS doctors (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id {ID_TYPE},
           name VARCHAR(255) NOT NULL,
           specialization VARCHAR(100) NOT NULL,
           hospital_id INT,
           FOREIGN KEY (hospital_id) REFERENCES hospitals(id)
         )
         """)
-        print("✓ Tables 'hospitals' and 'doctors' checked/created.")
 
         # Queries Table
-        cursor.execute("""
+        cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS queries (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id {ID_TYPE},
           name VARCHAR(255) NOT NULL,
           email VARCHAR(255) NOT NULL,
           category VARCHAR(100) NOT NULL,
-          message TEXT NOT NULL,
+          message {TEXT_TYPE} NOT NULL,
           user_id INT,
           hospital_id INT,
           doctor_id INT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at {TIMESTAMP_TYPE}
         )
         """)
-        print("✓ Table 'queries' checked/created.")
 
         # Appointments Table
-        cursor.execute("""
+        cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS appointments (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id {ID_TYPE},
           patient_name VARCHAR(255) NOT NULL,
           specialization VARCHAR(100) NOT NULL,
           appointment_date DATE NOT NULL,
           time_slot VARCHAR(50) NOT NULL,
-          notes TEXT,
+          notes {TEXT_TYPE},
           user_id INT,
           hospital_id INT,
           doctor_id INT,
           payment_method VARCHAR(50),
           payment_status VARCHAR(50),
           fee DECIMAL(10, 2),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at {TIMESTAMP_TYPE}
         )
         """)
-        print("✓ Table 'appointments' checked/created.")
 
-        # Patient Records Table (Unified History)
-        cursor.execute("""
+        # Patient Records Table
+        cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS patient_records (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id {ID_TYPE},
           user_id INT,
           patient_name VARCHAR(255) NOT NULL,
           doctor_name VARCHAR(255) NOT NULL,
           hospital_name VARCHAR(255) NOT NULL,
           location VARCHAR(255) NOT NULL,
           hospital_id INT NOT NULL,
-          description TEXT NOT NULL,
+          description {TEXT_TYPE} NOT NULL,
           type VARCHAR(50) NOT NULL,
           payment_method VARCHAR(50),
           payment_status VARCHAR(50),
           fee DECIMAL(10, 2),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_id) REFERENCES users(id)
+          is_read BOOLEAN DEFAULT FALSE,
+          created_at {TIMESTAMP_TYPE}
         )
         """)
-        print("✓ Table 'patient_records' checked/created.")
+        print("✓ All tables checked/created.")
 
-        # 2. Migration: Add columns to existing tables if they were created earlier
-        migration_statements = [
-            "ALTER TABLE patient_records ADD COLUMN user_id INT",
-            "ALTER TABLE patient_records ADD COLUMN doctor_name VARCHAR(255)",
-            "ALTER TABLE queries ADD COLUMN user_id INT",
-            "ALTER TABLE queries ADD COLUMN hospital_id INT",
-            "ALTER TABLE queries ADD COLUMN doctor_id INT",
-            "ALTER TABLE appointments ADD COLUMN user_id INT",
-            "ALTER TABLE appointments ADD COLUMN hospital_id INT",
-            "ALTER TABLE appointments ADD COLUMN doctor_id INT",
-            "ALTER TABLE appointments ADD COLUMN payment_method VARCHAR(50)",
-            "ALTER TABLE appointments ADD COLUMN payment_status VARCHAR(50)",
-            "ALTER TABLE appointments ADD COLUMN fee DECIMAL(10, 2)",
-            "ALTER TABLE patient_records ADD COLUMN payment_method VARCHAR(50)",
-            "ALTER TABLE patient_records ADD COLUMN payment_status VARCHAR(50)",
-            "ALTER TABLE patient_records ADD COLUMN fee DECIMAL(10, 2)",
-            "ALTER TABLE patient_records ADD COLUMN is_read BOOLEAN DEFAULT FALSE"
-        ]
-        
-        for statement in migration_statements:
-            try:
-                cursor.execute(statement)
-                print(f"✓ Migration: {statement}")
-            except Error as e:
-                # Column might already exist, which is fine
-                if e.errno == 1060: # Duplicate column name
-                    pass
-                else:
-                    print(f"Migration Note (safe to ignore if column exists): {e}")
-
-        # 3. Seed initial data
+        # Seed data if empty
         cursor.execute("SELECT COUNT(*) FROM hospitals")
         if cursor.fetchone()[0] == 0:
             hospitals_data = [
@@ -162,40 +160,28 @@ def setup_database():
             h_ids = [row[0] for row in cursor.fetchall()]
             
             doctors_data = [
-                # Hospital 1
                 ("Dr. Smith", "Cardiology", h_ids[0]),
                 ("Dr. Wilson", "Neurology", h_ids[0]),
                 ("Dr. Miller", "General Surgery", h_ids[0]),
-                # Hospital 2
                 ("Dr. Adams", "Dermatology", h_ids[1]),
                 ("Dr. Taylor", "Orthopedics", h_ids[1]),
                 ("Dr. Anderson", "ENT", h_ids[1]),
-                # Hospital 3
                 ("Dr. Brown", "Pediatrics", h_ids[2]),
                 ("Dr. Thomas", "Internal Medicine", h_ids[2]),
-                # Hospital 4
                 ("Dr. Garcia", "General Health", h_ids[3]),
                 ("Dr. Rodriguez", "Gastroenterology", h_ids[3]),
-                # Hospital 5
                 ("Dr. Martinez", "Psychiatry", h_ids[4]),
                 ("Dr. Hernandez", "Oncology", h_ids[4]),
-                # Hospital 6
                 ("Dr. Lopez", "Urology", h_ids[5]),
                 ("Dr. Gonzalez", "Ophthalmology", h_ids[5]),
-                # Hospital 7
                 ("Dr. Perez", "Gynecology", h_ids[6]),
-                # Hospital 8
                 ("Dr. Clark", "Pediatrics", h_ids[7]),
                 ("Dr. Lewis", "Child Psychology", h_ids[7]),
-                # Hospital 9
                 ("Dr. Walker", "Cardiology", h_ids[8]),
                 ("Dr. Young", "Cardiovascular Surgery", h_ids[8]),
-                # Hospital 10
                 ("Dr. Hall", "Orthopedics", h_ids[9]),
                 ("Dr. Allen", "Sports Medicine", h_ids[9]),
-                # Hospital 11
                 ("Dr. Wright", "Physiotherapy", h_ids[10]),
-                # Hospital 12
                 ("Dr. King", "Endocrinology", h_ids[11]),
                 ("Dr. Scott", "Rheumatology", h_ids[11])
             ]
@@ -203,14 +189,17 @@ def setup_database():
             print("✓ Seeded sample hospitals and doctors data.")
 
         connection.commit()
-        print("\nAll systems ready! Run 'python app.py' to start the backend.")
+        print("\nDatabase setup complete!")
 
-    except Error as e:
+    except Exception as e:
         print(f"Database Error: {e}")
     finally:
-        if 'connection' in locals() and connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
+
+if __name__ == '__main__':
+    setup_database()
 
 if __name__ == '__main__':
     # Optional: USER requested to ensure the database is updated.
