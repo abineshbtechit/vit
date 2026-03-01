@@ -8,13 +8,11 @@ const ServiceSelection = () => {
     const state = JSON.parse(localStorage.getItem('currentFlowState') || '{}');
 
     return (
-        <div style={{ backgroundColor: '#fcfdfe', minHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{
-                background: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)',
+                background: 'transparent',
                 padding: '5rem 0 8rem',
-                borderBottom: '1px solid #e2e8f0',
-                textAlign: 'center',
-                backgroundColor: '#fff'
+                textAlign: 'center'
             }}>
                 <div className="container">
                     <ScrollReveal>
@@ -29,7 +27,7 @@ const ServiceSelection = () => {
             <div className="container" style={{ marginTop: '-4rem', paddingBottom: '6rem', maxWidth: '900px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
                     <ScrollReveal direction="left">
-                        <div style={{ backgroundColor: 'white', borderRadius: '30px', padding: '3rem 2rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(10px)', borderRadius: '30px', padding: '3rem 2rem', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <div style={{
                                 width: '80px',
                                 height: '80px',
@@ -45,12 +43,12 @@ const ServiceSelection = () => {
                             <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', flexGrow: 1, lineHeight: '1.6' }}>
                                 Schedule a formal visit. Choose your preferred date and time slot for a comprehensive checkup.
                             </p>
-                            <Button onClick={() => navigate('/appointment-form')} style={{ width: '100%', padding: '1.2rem', borderRadius: '15px', fontSize: '1.1rem' }}>Book Visit Now</Button>
+                            <Button onClick={() => navigate('/appointment-form')} style={{ width: '100%', padding: '1.2rem', borderRadius: '50px', fontSize: '1.1rem' }}>Book Visit Now</Button>
                         </div>
                     </ScrollReveal>
 
                     <ScrollReveal direction="right">
-                        <div style={{ backgroundColor: 'white', borderRadius: '30px', padding: '3rem 2rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(10px)', borderRadius: '30px', padding: '3rem 2rem', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <div style={{
                                 width: '80px',
                                 height: '80px',
@@ -66,7 +64,7 @@ const ServiceSelection = () => {
                             <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', flexGrow: 1, lineHeight: '1.6' }}>
                                 Have a quick question? Send a message to the specialist and get detailed medical advice online.
                             </p>
-                            <Button variant="secondary" onClick={() => navigate('/query-form')} style={{ width: '100%', padding: '1.2rem', borderRadius: '15px', fontSize: '1.1rem' }}>Send Online Query</Button>
+                            <Button variant="secondary" onClick={() => navigate('/query-form')} style={{ width: '100%', padding: '1.2rem', borderRadius: '50px', fontSize: '1.1rem' }}>Send Online Query</Button>
                         </div>
                     </ScrollReveal>
                 </div>

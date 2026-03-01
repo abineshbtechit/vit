@@ -25,11 +25,10 @@ const DoctorSelection = () => {
     if (loading) return <div className="container" style={{ padding: '6rem 0', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px', borderTopColor: 'var(--primary)' }}></div><p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Finding specialists...</p></div>;
 
     return (
-        <div style={{ backgroundColor: '#fcfdfe', minHeight: '80vh' }}>
+        <div style={{ minHeight: '80vh' }}>
             <div style={{
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                background: 'transparent',
                 padding: '5rem 0 8rem',
-                borderBottom: '1px solid #bae6fd',
                 textAlign: 'center'
             }}>
                 <div className="container">
@@ -44,7 +43,7 @@ const DoctorSelection = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
                     {doctors.map((d, i) => (
                         <ScrollReveal key={d.id} delay={i * 0.05}>
-                            <div style={{ backgroundColor: 'white', borderRadius: '30px', padding: '2.5rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(10px)', borderRadius: '30px', padding: '2.5rem', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
                                     <div style={{
                                         width: '70px',
@@ -75,7 +74,7 @@ const DoctorSelection = () => {
                                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>🕒 9 AM - 5 PM</div>
                                     </div>
                                 </div>
-                                <Button onClick={() => handleSelect(d)} style={{ width: '100%', padding: '1rem', borderRadius: '15px' }}>Select Specialist</Button>
+                                <Button onClick={() => handleSelect(d)} style={{ width: '100%', padding: '1rem', borderRadius: '50px' }}>Select Specialist</Button>
                             </div>
                         </ScrollReveal>
                     ))}

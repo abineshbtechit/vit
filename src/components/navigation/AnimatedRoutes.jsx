@@ -8,6 +8,7 @@ import HospitalSelection from '../../pages/HospitalSelection';
 import DoctorSelection from '../../pages/DoctorSelection';
 import ServiceSelection from '../../pages/ServiceSelection';
 import Records from '../../pages/Records';
+import RecordDetail from '../../pages/RecordDetail';
 import AppointmentForm from '../forms/AppointmentForm';
 import QueryForm from '../forms/QueryForm';
 import Card from '../ui/Card';
@@ -25,8 +26,16 @@ const AnimatedRoutes = ({ user, handleLoginSuccess, handleLogout, setNotificatio
                 <Route path="/hospital/:id/doctors" element={<PageWrapper><DoctorSelection /></PageWrapper>} />
                 <Route path="/doctor/:id/services" element={<PageWrapper><ServiceSelection /></PageWrapper>} />
                 <Route path="/records" element={<PageWrapper><Records user={user} /></PageWrapper>} />
-                <Route path="/appointment-form" element={<PageWrapper><div className="container" style={{ padding: '4rem 0', maxWidth: '600px' }}><Card title="Book Appointment"><AppointmentForm onSuccess={(m) => { setNotification(m); window.scrollTo(0, 0); }} /></Card></div></PageWrapper>} />
-                <Route path="/query-form" element={<PageWrapper><div className="container" style={{ padding: '4rem 0', maxWidth: '600px' }}><Card title="Submit Query"><QueryForm onSuccess={(m) => { setNotification(m); window.scrollTo(0, 0); }} /></Card></div></PageWrapper>} />
+                <Route path="/record/:id" element={<PageWrapper><RecordDetail /></PageWrapper>} />
+                <Route path="/appointment-form" element={<PageWrapper><div className="container" style={{ padding: '4rem 0', maxWidth: '600px' }}><Card title="Book Appointment" hoverEffect={false}><AppointmentForm onSuccess={(m) => { setNotification(m); window.scrollTo(0, 0); }} /></Card></div></PageWrapper>} />
+                <Route path="/query-form" element={<PageWrapper><div className="container" style={{ padding: '4rem 0', maxWidth: '600px' }}><Card title="Submit Query" hoverEffect={false}><QueryForm onSuccess={(m) => {
+                    // Show a local message or just log, but delay the global notification per user request
+                    console.log('Query submitted, notification scheduled for 30s');
+                    setTimeout(() => {
+                        setNotification(m);
+                        window.scrollTo(0, 0);
+                    }, 30000);
+                }} /></Card></div></PageWrapper>} />
             </Routes>
         </AnimatePresence>
     );

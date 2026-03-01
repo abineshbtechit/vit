@@ -92,6 +92,7 @@ def setup_database():
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS patient_records (
           id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT,
           patient_name VARCHAR(255) NOT NULL,
           doctor_name VARCHAR(255) NOT NULL,
           hospital_name VARCHAR(255) NOT NULL,
@@ -102,13 +103,15 @@ def setup_database():
           payment_method VARCHAR(50),
           payment_status VARCHAR(50),
           fee DECIMAL(10, 2),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
         )
         """)
         print("✓ Table 'patient_records' checked/created.")
 
         # 2. Migration: Add columns to existing tables if they were created earlier
         migration_statements = [
+            "ALTER TABLE patient_records ADD COLUMN user_id INT",
             "ALTER TABLE patient_records ADD COLUMN doctor_name VARCHAR(255)",
             "ALTER TABLE queries ADD COLUMN user_id INT",
             "ALTER TABLE queries ADD COLUMN hospital_id INT",
@@ -121,7 +124,8 @@ def setup_database():
             "ALTER TABLE appointments ADD COLUMN fee DECIMAL(10, 2)",
             "ALTER TABLE patient_records ADD COLUMN payment_method VARCHAR(50)",
             "ALTER TABLE patient_records ADD COLUMN payment_status VARCHAR(50)",
-            "ALTER TABLE patient_records ADD COLUMN fee DECIMAL(10, 2)"
+            "ALTER TABLE patient_records ADD COLUMN fee DECIMAL(10, 2)",
+            "ALTER TABLE patient_records ADD COLUMN is_read BOOLEAN DEFAULT FALSE"
         ]
         
         for statement in migration_statements:

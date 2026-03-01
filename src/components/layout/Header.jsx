@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import NotificationDropdown from './NotificationDropdown';
 
 const Header = ({ user, onLogout }) => {
     const navigate = useNavigate();
@@ -29,9 +30,12 @@ const Header = ({ user, onLogout }) => {
                 <>
                     <Link to="/select-hospital" onClick={() => setIsMobileMenuOpen(false)} style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem' }}>Services</Link>
                     <Link to="/records" onClick={() => setIsMobileMenuOpen(false)} style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem' }}>My Records</Link>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
-                        <span style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '0.95rem' }}>Hello, {user.name}</span>
-                        <Button onClick={handleLogout} variant="secondary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>Logout</Button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto', padding: '1.5rem 0', borderTop: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '1rem' }}>{user.name}</span>
+                            <NotificationDropdown user={user} />
+                        </div>
+                        <Button onClick={handleLogout} variant="danger" style={{ padding: '0.75rem', fontSize: '0.9rem', width: '100%', borderRadius: '50px' }}>Logout</Button>
                     </div>
                 </>
             ) : (
@@ -48,8 +52,8 @@ const Header = ({ user, onLogout }) => {
     return (
         <>
             <header style={{
-                backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.8)' : 'white',
-                backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+                backgroundColor: isScrolled ? 'rgba(15, 23, 42, 0.9)' : 'rgba(15, 23, 42, 0.6)',
+                backdropFilter: 'blur(12px)',
                 borderBottom: '1px solid var(--border)',
                 padding: isScrolled ? '0.75rem 0' : '1.25rem 0',
                 position: 'sticky',
@@ -89,43 +93,60 @@ const Header = ({ user, onLogout }) => {
                         <span style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.5px' }}>MediFlow</span>
                     </Link>
 
-                    {/* Desktop Nav */}
-                    <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                        <Link to="/" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem' }}>Home</Link>
-                        {user ? (
-                            <>
-                                <Link to="/select-hospital" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem' }}>Services</Link>
-                                <Link to="/records" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem' }}>My Records</Link>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                                    <span style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '0.95rem' }}>Hello, {user.name}</span>
-                                    <Button onClick={handleLogout} variant="secondary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>Logout</Button>
+                    {/* Right interactions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {/* Desktop Nav */}
+                        <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', marginRight: '1rem' }}>
+                            <Link to="/" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '700', fontSize: '1rem', transition: 'all 0.2s ease' }} onMouseOver={(e) => e.target.style.color = 'var(--primary)'} onMouseOut={(e) => e.target.style.color = 'var(--text)'}>Home</Link>
+                            {user && (
+                                <>
+                                    <Link to="/select-hospital" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '700', fontSize: '1rem', transition: 'all 0.2s ease' }} onMouseOver={(e) => e.target.style.color = 'var(--primary)'} onMouseOut={(e) => e.target.style.color = 'var(--text)'}>Services</Link>
+                                    <Link to="/records" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '700', fontSize: '1rem', transition: 'all 0.2s ease' }} onMouseOver={(e) => e.target.style.color = 'var(--primary)'} onMouseOut={(e) => e.target.style.color = 'var(--text)'}>My Records</Link>
+                                </>
+                            )}
+                            {!user && <Link to="/login" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '700', fontSize: '1rem' }}>Login</Link>}
+                        </nav>
+
+                        {user && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                    <div style={{ height: '30px', width: '2px', backgroundColor: 'var(--border)', margin: '0 0.5rem' }} />
+                                    <span style={{ fontWeight: '800', color: 'var(--text)', fontSize: '1rem' }}>{user.name}</span>
+                                    <Button onClick={handleLogout} variant="danger" style={{ padding: '0.6rem 1.75rem', fontSize: '0.9rem', width: 'auto' }}>Logout</Button>
                                 </div>
-                            </>
-                        ) : (
-                            <>
-                                <Link to="/login" style={{ textDecoration: 'none', color: 'var(--text)', fontWeight: '600', fontSize: '0.95rem' }}>Login</Link>
+                                <NotificationDropdown user={user} />
+                            </div>
+                        )}
+
+                        {!user && (
+                            <div className="desktop-only">
                                 <Link to="/signup">
                                     <Button style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}>Sign Up</Button>
                                 </Link>
-                            </>
+                            </div>
                         )}
-                    </nav>
 
-                    {/* Mobile Menu Toggle */}
-                    <button
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="mobile-only"
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            fontSize: '1.5rem',
-                            display: 'none', // Overridden by media query if needed, but we'll use a class
-                            cursor: 'pointer'
-                        }}
-                    >
-                        {isMobileMenuOpen ? '✕' : '☰'}
-                    </button>
-
+                        {/* Mobile Menu Toggle */}
+                        <button
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="mobile-only"
+                            style={{
+                                background: 'rgba(37, 99, 235, 0.05)',
+                                border: 'none',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '10px',
+                                color: 'var(--primary)',
+                                fontSize: '1.25rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {isMobileMenuOpen ? '✕' : '☰'}
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -139,4 +160,3 @@ const Header = ({ user, onLogout }) => {
 };
 
 export default Header;
-

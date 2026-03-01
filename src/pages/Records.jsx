@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchUserActivity } from '../services/api';
+import Button from '../components/ui/Button';
 
 const Records = ({ user }) => {
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (user) {
@@ -25,9 +28,9 @@ const Records = ({ user }) => {
     return (
         <div className="container" style={{ padding: '4rem 0' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '3rem' }}>My Medical Records</h2>
-            <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius)', overflowX: 'auto', boxShadow: 'var(--shadow-md)' }}>
+            <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(10px)', borderRadius: 'var(--radius)', overflowX: 'auto', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                    <thead style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid var(--border)' }}>
+                    <thead style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', borderBottom: '2px solid var(--border)' }}>
                         <tr>
                             <th style={{ padding: '1.25rem' }}>Patient Name</th>
                             <th style={{ padding: '1.25rem' }}>Type</th>
@@ -39,14 +42,15 @@ const Records = ({ user }) => {
                             <th style={{ padding: '1.25rem' }}>Fee</th>
                             <th style={{ padding: '1.25rem' }}>Payment</th>
                             <th style={{ padding: '1.25rem' }}>Record/Description</th>
+                            <th style={{ padding: '1.25rem' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {activities.length === 0 ? (
-                            <tr><td colSpan="8" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>You haven't made any appointments or queries yet.</td></tr>
+                            <tr><td colSpan="11" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>You haven't made any appointments or queries yet.</td></tr>
                         ) : (
                             activities.map((act, i) => (
-                                <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                                <tr key={act.id || i} style={{ borderBottom: '1px solid var(--border)' }}>
                                     <td style={{ padding: '1.25rem', fontWeight: '500' }}>{act.patient_name}</td>
                                     <td style={{ padding: '1.25rem' }}>
                                         <span style={{
@@ -82,6 +86,15 @@ const Records = ({ user }) => {
                                         ) : '-'}
                                     </td>
                                     <td style={{ padding: '1.25rem', fontSize: '0.9rem', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{act.description || 'No description provided'}</td>
+                                    <td style={{ padding: '1.25rem' }}>
+                                        <Button
+                                            onClick={() => navigate(`/record/${act.id}`)}
+                                            variant="primary"
+                                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', width: 'auto' }}
+                                        >
+                                            View Details
+                                        </Button>
+                                    </td>
                                 </tr>
                             ))
                         )}

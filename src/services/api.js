@@ -116,6 +116,32 @@ export const fetchUserActivity = async (userId) => {
     }
 };
 
+export const markRecordRead = async (recordId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/records/${recordId}/read`, {
+            method: 'PUT'
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to mark as read');
+        return data;
+    } catch (error) {
+        console.error('API Error (markRecordRead):', error);
+        throw error;
+    }
+};
+
+export const fetchRecordById = async (recordId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/records/${recordId}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch record');
+        return data;
+    } catch (error) {
+        console.error('API Error (fetchRecordById):', error);
+        throw error;
+    }
+};
+
 export const checkHealth = async () => {
     try {
         const response = await fetch(`${API_BASE_URL}/health`);

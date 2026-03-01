@@ -4,6 +4,7 @@ import { motion, useScroll } from 'framer-motion';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import AnimatedRoutes from './components/navigation/AnimatedRoutes';
+import ScrollToTop from './components/navigation/ScrollToTop';
 
 function App() {
   const [notification, setNotification] = useState(null);
@@ -34,6 +35,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="App">
         <motion.div
           style={{

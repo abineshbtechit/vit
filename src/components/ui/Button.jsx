@@ -1,51 +1,59 @@
 import React from 'react';
 
-const Button = ({ 
-  children, 
-  onClick, 
-  type = 'button', 
-  variant = 'primary', 
-  className = '', 
+const Button = ({
+  children,
+  onClick,
+  type = 'button',
+  variant = 'primary',
+  className = '',
   loading = false,
   disabled = false,
-  ...props 
+  style: externalStyle = {},
+  ...props
 }) => {
   const baseStyles = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '0.75rem 1.5rem',
-    borderRadius: 'var(--radius)',
     fontWeight: '600',
     fontSize: '1rem',
     border: 'none',
     transition: 'all 0.2s ease',
     opacity: loading || disabled ? 0.7 : 1,
     cursor: loading || disabled ? 'not-allowed' : 'pointer',
-    width: '100%'
   };
 
   const variants = {
     primary: {
-      backgroundColor: 'var(--primary)',
+      backgroundColor: '#3b82f6',
       color: 'white',
+      borderRadius: '50px',
     },
     secondary: {
-      backgroundColor: 'var(--secondary)',
+      backgroundColor: '#3b82f6',
       color: 'white',
+      borderRadius: '50px',
+    },
+    danger: {
+      backgroundColor: '#ef4444',
+      color: 'white',
+      borderRadius: '50px',
     },
     outline: {
       backgroundColor: 'transparent',
-      border: '2px solid var(--primary)',
-      color: 'var(--primary)',
+      border: '2px solid #3b82f6',
+      color: '#3b82f6',
+      borderRadius: '50px',
     }
   };
 
-  const hoverStyles = {
-    primary: 'var(--primary-hover)',
-    secondary: 'var(--secondary-hover)',
-    outline: 'rgba(0, 82, 204, 0.05)'
-  };
+  const currentVariant = variants[variant] || variants.primary;
+
+  // Allow external styles for layout only — color is always enforced by variant
+  const safeExternalStyle = { ...externalStyle };
+  delete safeExternalStyle.backgroundColor;
+  delete safeExternalStyle.color;
 
   return (
     <button
@@ -54,27 +62,18 @@ const Button = ({
       disabled={disabled || loading}
       style={{
         ...baseStyles,
-        ...variants[variant]
+        ...safeExternalStyle,
+        ...currentVariant,
       }}
       className={`btn-${variant} ${className}`}
-      onMouseOver={(e) => {
-        if (!disabled && !loading) {
-          e.currentTarget.style.backgroundColor = variant === 'outline' ? hoverStyles.outline : hoverStyles[variant];
-        }
-      }}
-      onMouseOut={(e) => {
-        if (!disabled && !loading) {
-          e.currentTarget.style.backgroundColor = variants[variant].backgroundColor;
-        }
-      }}
       {...props}
     >
       {loading ? (
-        <span className="spinner" style={{ 
-          width: '20px', 
-          height: '20px', 
-          border: '2px solid rgba(255,255,255,0.3)', 
-          borderTop: '2px solid white', 
+        <span style={{
+          width: '18px',
+          height: '18px',
+          border: '2px solid rgba(255,255,255,0.3)',
+          borderTop: '2px solid white',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
           display: 'inline-block'
