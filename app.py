@@ -2,16 +2,18 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Database Configuration
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '0402',  # Updated by user
-    'database': 'mediflow_db'
+    "host": os.environ.get("DB_HOST"),
+    "user": os.environ.get("DB_USER"),
+    "password": os.environ.get("DB_PASSWORD"),
+    "database": os.environ.get("DB_NAME"),
+    "port": int(os.environ.get("DB_PORT", 3306))
 }
 
 def get_db_connection():
@@ -283,5 +285,4 @@ def index():
 def health_check():
     return jsonify({"status": "Server is running"}), 200
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+
