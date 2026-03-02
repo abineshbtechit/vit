@@ -65,7 +65,7 @@ const Records = ({ user }) => {
                                             {act.type}
                                         </span>
                                     </td>
-                                    <td style={{ padding: '1.25rem', fontSize: '0.9rem' }}>{new Date(act.date).toLocaleDateString()}</td>
+                                    <td style={{ padding: '1.25rem', fontSize: '0.9rem' }}>{new Date(act.created_at || act.date).toLocaleDateString()}</td>
                                     <td style={{ padding: '1.25rem', fontWeight: '500' }}>{act.doctor_name}</td>
                                     <td style={{ padding: '1.25rem', fontWeight: '600' }}>{act.hospital_name}</td>
                                     <td style={{ padding: '1.25rem', color: 'var(--text-muted)' }}>{act.location}</td>

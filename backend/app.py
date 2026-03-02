@@ -8,7 +8,7 @@ import mysql.connector
 app = Flask(__name__)
 
 # ✅ Allow both deployed and local frontend
-CORS(app, origins=["https://vit-chi.vercel.app", "http://localhost:5173", "http://localhost:3000"])
+CORS(app, origins=["https://vit-chi.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"])
 
 # ✅ DB Configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -42,6 +42,83 @@ def get_cursor(conn, is_postgres, dictionary=True):
         return conn.cursor()          # Postgres already dict_row
     else:
         return conn.cursor(dictionary=True)  # MySQL needs this
+# ---------------- AUTH ----------------
+@app.route("/api/signup", methods=["POST"])
+def signup():
+    data = request.json
+    name = data.get("name")
+    phone = data.get("phone")
+    password = data.get("password")
+
+    if not all([name, phone, password]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    conn, is_pg = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB connection failed"}), 500
+
+    try:
+        cur = get_cursor(conn, is_pg, dictionary=False)
+        
+        # Check if user already exists
+        cur.execute("SELECT id FROM users WHERE phone = %s", (phone,))
+        if cur.fetchone():
+            return jsonify({"error": "User with this phone number already exists"}), 400
+
+        # Insert new user
+        placeholder = "%s"
+        returning = "RETURNING id" if is_pg else ""
+        cur.execute(f"""
+            INSERT INTO users (name, phone, password)
+            VALUES ({placeholder}, {placeholder}, {placeholder})
+            {returning}
+        """, (name, phone, password))
+        
+        user_id = cur.fetchone()[0] if is_pg else cur.lastrowid
+        conn.commit()
+
+        return jsonify({
+            "success": True,
+            "user": {"id": user_id, "name": name, "phone": phone}
+        }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.json
+    phone = data.get("phone")
+    password = data.get("password")
+
+    if not all([phone, password]):
+        return jsonify({"error": "Missing phone or password"}), 400
+
+    conn, is_pg = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB connection failed"}), 500
+
+    try:
+        cur = get_cursor(conn, is_pg)
+        cur.execute("SELECT * FROM users WHERE phone = %s AND password = %s", (phone, password))
+        user = cur.fetchone()
+
+        if user:
+            # Handle both MySQL (dict) and Postgres (dict_row)
+            user_data = dict(user)
+            user_data.pop('password', None) # Don't send password back
+            return jsonify({"success": True, "user": user_data}), 200
+        else:
+            return jsonify({"error": "Invalid phone number or password"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 # ---------------- HEALTH ----------------
 @app.route("/health")
 def health():
@@ -237,4 +314,4 @@ def index():
 
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
