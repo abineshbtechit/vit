@@ -1,8 +1,8 @@
 /**
  * API Service to handle all backend communications
  */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://vit-7gi0.onrender.com';
+//const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://vit-2-68y8.onrender.com';
 
 export const submitQuery = async (queryData) => {
     try {
