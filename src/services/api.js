@@ -1,8 +1,7 @@
 /**
  * API Service to handle all backend communications
  */
-
-const API_BASE_URL = ''; // Empty because we're using the Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://vit-2-68y8.onrender.com';
 
 export const submitQuery = async (queryData) => {
     try {
